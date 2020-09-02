@@ -2459,7 +2459,42 @@
         JSXEmptyExpression: function (expr, precedence, flags) {
             return '';
         },
+        JSXFragment: function (expr, precedence, flags) {
+            // console.log(expr, precedence, flags)
+            // console.log(this.generateExpression(expr.name, precedence, flags))
+            let result = [];
+            
+            result.push(this.generateExpression(expr.openingFragment, precedence, flags));
+            if (expr.children) {
+                for(let i = 0, iz = expr.children.length; i < iz; ++i) {
+                    result.push(this.generateExpression(expr.children[i], precedence, flags));
+                }
+            }
+            if (expr.closingFragment) {
+                result.push(this.generateExpression(expr.closingFragment, precedence, flags));
+            }
+            return result;
+        },
+        JSXOpeningFragment: function (expr, precedence, flags) {
+            var result, i, iz;
+            result = ['<','React.Fragment'];
+            if (expr.attributes) {
+                for(i = 0, iz = expr.attributes.length; i < iz; ++i) {
+                    result.push(' ');
+                    result.push(this.generateExpression(expr.attributes[i], precedence, flags));
+                }
+            }
+            result.push(expr.selfClosing ? ' />' : '>');
+            return result;
+        },
+        JSXClosingFragment: function (expr, precedence, flags) {
+            // var result, i, iz;
+            // return ['</', this.generateExpression(expr.name, precedence, flags), '>'];
+            // return result;
+            return ['</', 'React.Fragment', '>'];
 
+        },
+        
         JSXExpressionContainer: function (expr, precedence, flags) {
             return ['{', this.generateExpression(expr.expression, precedence, flags), '}'];
         },
@@ -2491,7 +2526,9 @@
                 return result;
             }
             if (expr.value.type === 'JSXExpressionContainer') {
+                result.push('{');
                 result.push(this.generateExpression(expr.value.expression, precedence, flags));
+                result.push('}');
                 return result;
             }
         },
